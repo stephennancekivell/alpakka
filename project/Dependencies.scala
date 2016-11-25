@@ -27,6 +27,12 @@ object Dependencies {
     )
   )
 
+  val Gitter = Seq(
+    libraryDependencies ++= Seq(
+      "com.typesafe.akka" %% "akka-http-core" % "10.0.0"
+    )
+  )
+
   val Mqtt = Seq(
     libraryDependencies ++= Seq(
       "org.eclipse.paho" % "org.eclipse.paho.client.mqttv3" % "1.1.0",       // Eclipse Public License 1.0

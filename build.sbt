@@ -17,6 +17,13 @@ lazy val cassandra = project
     Dependencies.Cassandra
   )
 
+lazy val gitter = project
+  .enablePlugins(AutomateHeaderPlugin)
+  .settings(
+    name := "akka-stream-alpakka-gitter",
+    Dependencies.Gitter
+  )
+
 lazy val files = project // The name file is taken by `sbt.file`!
   .in(file("file"))
   .enablePlugins(AutomateHeaderPlugin)
