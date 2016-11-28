@@ -44,6 +44,14 @@ lazy val s3 = project
     Dependencies.S3
   )
 
+lazy val smtp = project
+  .in(file("smtp"))
+  .enablePlugins(AutomateHeaderPlugin)
+  .settings(
+    name := "akka-stream-alpakka-smtp",
+    Dependencies.Smtp
+  )
+
 lazy val docs = project
   .enablePlugins(ParadoxPlugin, NoPublish)
   .disablePlugins(BintrayPlugin)

@@ -32,6 +32,12 @@ object Dependencies {
     )
   )
 
+  val Smtp = Seq(
+    libraryDependencies ++= Seq(
+      "javax.mail" % "mail" % "1.4.7" // GPL
+    )
+  )
+
   val Cassandra = Seq(
     libraryDependencies ++= Seq(
       "com.datastax.cassandra" % "cassandra-driver-core" % "3.1.0" // ApacheV2
