@@ -61,6 +61,8 @@ object Dependencies {
     libraryDependencies ++= Seq(
       "org.mongodb.scala" %% "mongo-scala-driver" % "1.2.1", // ApacheV2
       "com.typesafe.play" %% "play-json" % "2.6.0-M1"
+    )
+  )
 
   val DynamoDB = Seq(
     libraryDependencies ++= Seq(
