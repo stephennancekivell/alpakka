@@ -4,12 +4,12 @@
 package akka.stream.alpakka.ftp
 package impl
 
-import akka.stream.stage.{ GraphStageWithMaterializedValue, OutHandler }
-import akka.stream.{ Attributes, IOResult, Outlet, SourceShape }
+import akka.stream.stage.{GraphStageWithMaterializedValue, OutHandler}
+import akka.stream.{Attributes, IOResult, Outlet, SourceShape}
 import akka.stream.impl.Stages.DefaultAttributes.IODispatcher
 import akka.util.ByteString
 import akka.util.ByteString.ByteString1C
-import scala.concurrent.{ Future, Promise }
+import scala.concurrent.{Future, Promise}
 import scala.util.control.NonFatal
 import java.io.InputStream
 import java.nio.file.Path
@@ -25,7 +25,7 @@ private[ftp] trait FtpIOGraphStage[FtpClient, S <: RemoteFileSettings]
 
   def connectionSettings: S
 
-  implicit def ftpClient: FtpClient
+  implicit def ftpClient: () => FtpClient
 
   val ftpLike: FtpLike[FtpClient, S]
 
@@ -38,7 +38,7 @@ private[ftp] trait FtpIOGraphStage[FtpClient, S <: RemoteFileSettings]
 
     val matValuePromise = Promise[IOResult]()
 
-    val logic = new FtpGraphStageLogic[ByteString, FtpClient, S](shape, ftpLike, connectionSettings) {
+    val logic = new FtpGraphStageLogic[ByteString, FtpClient, S](shape, ftpLike, connectionSettings, ftpClient) {
 
       private[this] var isOpt: Option[InputStream] = None
       private[this] var readBytesTotal: Long = 0L

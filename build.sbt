@@ -1,7 +1,7 @@
 lazy val alpakka = project
   .in(file("."))
   .enablePlugins(PublishUnidoc)
-  .aggregate(amqp, cassandra, docs, files, hbase, mqtt, s3, sqs, ftp)
+  .aggregate(amqp, cassandra, docs, files, hbase, mqtt, s3, simpleCodecs, sqs, ftp, jms)
 
 lazy val amqp = project
   .enablePlugins(AutomateHeaderPlugin)
@@ -15,6 +15,15 @@ lazy val cassandra = project
   .settings(
     name := "akka-stream-alpakka-cassandra",
     Dependencies.Cassandra
+  )
+
+lazy val dynamodb = project
+  .enablePlugins(AutomateHeaderPlugin)
+  .settings(
+    name := "akka-stream-alpakka-dynamodb",
+    resolvers += "DynamoDBLocal" at "http://dynamodb-local.s3-website-us-west-2.amazonaws.com/release/",
+    Dependencies.DynamoDB,
+    parallelExecution in Test := false
   )
 
 lazy val files = project // The name file is taken by `sbt.file`!
@@ -44,11 +53,7 @@ lazy val mqtt = project
   .enablePlugins(AutomateHeaderPlugin)
   .settings(
     name := "akka-stream-alpakka-mqtt",
-    Dependencies.Mqtt,
-
-    // Scala and Java tests start a separate MQTT broker.
-    // Make it not step on each other by running Scala and Java tests sequentially.
-    parallelExecution in Test := false
+    Dependencies.Mqtt
   )
 
 lazy val s3 = project
@@ -72,6 +77,21 @@ lazy val ftp = project
     name := "akka-stream-alpakka-ftp",
     Dependencies.Ftp,
     parallelExecution in Test := false
+  )
+
+lazy val jms = project
+  .enablePlugins(AutomateHeaderPlugin)
+  .settings(
+    name := "akka-stream-alpakka-jms",
+    Dependencies.Jms,
+    parallelExecution in Test := false
+  )
+
+lazy val simpleCodecs = project
+  .in(file("simple-codecs"))
+  .enablePlugins(AutomateHeaderPlugin)
+  .settings(
+    name := "akka-stream-alpakka-simple-codecs"
   )
 
 lazy val docs = project

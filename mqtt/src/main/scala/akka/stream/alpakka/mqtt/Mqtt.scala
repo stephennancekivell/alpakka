@@ -5,7 +5,7 @@ package akka.stream.alpakka.mqtt
 
 import akka.stream.stage._
 import akka.util.ByteString
-import org.eclipse.paho.client.mqttv3.{ MqttMessage => PahoMqttMessage, _ }
+import org.eclipse.paho.client.mqttv3.{MqttMessage => PahoMqttMessage, _}
 
 import scala.language.implicitConversions
 import scala.util._
@@ -73,10 +73,24 @@ final case class MqttConnectionSettings(
     broker: String,
     clientId: String,
     persistence: MqttClientPersistence,
-    auth: Option[(String, String)] = None
+    auth: Option[(String, String)] = None,
+    cleanSession: Boolean = true,
+    will: Option[Will] = None
 ) {
+  def withBroker(broker: String) =
+    copy(broker = broker)
+
   def withAuth(username: String, password: String) =
     copy(auth = Some((username, password)))
+
+  def withCleanSession(cleanSession: Boolean) =
+    copy(cleanSession = cleanSession)
+
+  def withWill(will: Will) =
+    copy(will = Some(will))
+
+  def withClientId(clientId: String) =
+    copy(clientId = clientId)
 }
 
 object MqttConnectionSettings {
@@ -89,6 +103,8 @@ object MqttConnectionSettings {
 }
 
 final case class MqttMessage(topic: String, payload: ByteString)
+
+final case class Will(message: MqttMessage, qos: MqttQoS, retained: Boolean)
 
 object MqttMessage {
 
@@ -107,20 +123,18 @@ private[mqtt] trait MqttConnectorLogic { this: GraphStageLogic =>
   import MqttConnectorLogic._
 
   def connectionSettings: MqttConnectionSettings
+
   def handleConnection(client: IMqttAsyncClient): Unit
+  def handleConnectionLost(ex: Throwable): Unit
+
+  val onConnect = getAsyncCallback[IMqttAsyncClient](handleConnection)
+  val onConnectionLost = getAsyncCallback[Throwable](handleConnectionLost)
 
   /**
    * Callback, that is called from the MQTT client thread before invoking
    * message handler callback in the GraphStage context.
    */
-  def beforeHandleMessage(): Unit
-
-  def handleMessage(message: MqttMessage): Unit
-  def handleConnectionLost(ex: Throwable): Unit
-
-  val onConnect = getAsyncCallback[IMqttAsyncClient](handleConnection)
-  val onMessage = getAsyncCallback[MqttMessage](handleMessage)
-  val onConnectionLost = getAsyncCallback[Throwable](handleConnectionLost)
+  def onMessage(message: MqttMessage) = ()
 
   final override def preStart(): Unit = {
     val client = new MqttAsyncClient(
@@ -130,13 +144,11 @@ private[mqtt] trait MqttConnectorLogic { this: GraphStageLogic =>
     )
 
     client.setCallback(new MqttCallback {
-      def messageArrived(topic: String, message: PahoMqttMessage) = {
-        beforeHandleMessage()
-        onMessage.invoke(MqttMessage(topic, ByteString(message.getPayload)))
-      }
+      def messageArrived(topic: String, message: PahoMqttMessage) =
+        onMessage(MqttMessage(topic, ByteString(message.getPayload)))
 
       def deliveryComplete(token: IMqttDeliveryToken) =
-        println(s"Delivery complete $token")
+        ()
 
       def connectionLost(cause: Throwable) =
         onConnectionLost.invoke(cause)
@@ -147,11 +159,15 @@ private[mqtt] trait MqttConnectorLogic { this: GraphStageLogic =>
         connectOptions.setUserName(user)
         connectOptions.setPassword(password.toCharArray)
     }
-    client.connect(connectOptions, (), connectHandler(client))
+    connectionSettings.will.foreach { will =>
+      connectOptions.setWill(will.message.topic, will.message.payload.toArray, will.qos.byteValue.toInt, will.retained)
+    }
+    connectOptions.setCleanSession(connectionSettings.cleanSession)
+    client.connect(connectOptions, (), connectHandler)
   }
 
-  private val connectHandler: IMqttAsyncClient => Try[IMqttToken] => Unit = client => {
-    case Success(_) => onConnect.invoke(client)
+  private val connectHandler: Try[IMqttToken] => Unit = {
+    case Success(token) => onConnect.invoke(token.getClient)
     case Failure(ex) => onConnectionLost.invoke(ex)
   }
 }

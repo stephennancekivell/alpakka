@@ -2,8 +2,8 @@ import sbt._, Keys._
 
 object Dependencies {
 
-  val ScalaVersions = Seq("2.11.8", "2.12.0")
-  val AkkaVersion = "2.4.14"
+  val ScalaVersions = Seq("2.11.8", "2.12.1")
+  val AkkaVersion = "2.4.16"
 
   val Common = Seq(
     libraryDependencies ++= Seq(
@@ -19,10 +19,11 @@ object Dependencies {
 
   val S3 = Seq(
     libraryDependencies ++= Seq(
-      "com.typesafe.akka" %% "akka-http"     % AkkaHttpVersion,
-      "com.typesafe.akka" %% "akka-http-xml" % AkkaHttpVersion,
+      "com.typesafe.akka"     %% "akka-http"     % AkkaHttpVersion,
+      "com.typesafe.akka"     %% "akka-http-xml" % AkkaHttpVersion,
       // in-memory filesystem for file related tests
-      "com.google.jimfs"   % "jimfs" % "1.1" % Test // ApacheV2
+      "com.google.jimfs"       % "jimfs"         % "1.1"   % Test, // ApacheV2
+      "com.github.tomakehurst" % "wiremock"      % "2.3.1" % Test //ApacheV2
     )
   )
 
@@ -55,19 +56,27 @@ object Dependencies {
     )
   }
 
+
   val MongoDb = Seq(
     libraryDependencies ++= Seq(
       "org.mongodb.scala" %% "mongo-scala-driver" % "1.2.1", // ApacheV2
       "com.typesafe.play" %% "play-json" % "2.6.0-M1"
+
+  val DynamoDB = Seq(
+    libraryDependencies ++= Seq(
+      "com.amazonaws"             % "aws-java-sdk-core"       % "1.11.73",          // ApacheV2
+      "com.amazonaws"             % "aws-java-sdk-dynamodb"   % "1.11.73",          // ApacheV2
+      "com.typesafe.akka"         %% "akka-http"              % AkkaHttpVersion,
+      "com.amazonaws"             % "DynamoDBLocal"           % "1.11.0"    % Test, // ApacheV2
+      "com.almworks.sqlite4java"  % "sqlite4java"             % "0.213"     % Test  // ApacheV2
+
     )
   )
 
   val Mqtt = Seq(
     libraryDependencies ++= Seq(
-      "org.eclipse.paho" % "org.eclipse.paho.client.mqttv3" % "1.1.0",       // Eclipse Public License 1.0
-      "io.moquette"      % "moquette-broker"                % "0.8.1" % Test // ApacheV2
-    ),
-    resolvers += "moquette" at "http://dl.bintray.com/andsel/maven/"
+      "org.eclipse.paho" % "org.eclipse.paho.client.mqttv3" % "1.1.0" // Eclipse Public License 1.0
+    )
   )
 
   val File = Seq(
@@ -91,7 +100,17 @@ object Dependencies {
 
   val Sqs = Seq(
     libraryDependencies ++= Seq(
-      "com.amazonaws"   % "aws-java-sdk-sqs"    % "1.11.51" // ApacheV2
+      "com.amazonaws" % "aws-java-sdk-sqs" % "1.11.76",        // ApacheV2
+      "org.mockito"   % "mockito-core"     % "2.3.7"    % Test // MIT
     )
+  )
+
+  val Jms = Seq(
+    libraryDependencies ++= Seq(
+      "javax.jms" % "jms" % "1.1" % Provided, // CDDL + GPLv2
+      "org.apache.activemq" % "activemq-broker" % "5.14.1" % Test, // ApacheV2
+      "org.apache.activemq" % "activemq-client" % "5.14.1" % Test // ApacheV2
+    ),
+    resolvers += "jboss" at "https://repository.jboss.org/nexus/content/groups/public"
   )
 }
