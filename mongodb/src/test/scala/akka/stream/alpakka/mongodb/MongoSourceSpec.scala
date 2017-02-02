@@ -19,16 +19,15 @@ class MongoSourceSpec
     with BeforeAndAfterAll
     with MustMatchers {
 
+  //#init-mat
   implicit val system = ActorSystem()
-
-  override protected def beforeAll(): Unit = {
-    Await.result(db.drop().toFuture(), 5.seconds)
-  }
-
   implicit val mat = ActorMaterializer()
+  //#init-mat
 
+  //#init-connection
   val db = Mongo.db
   val numbersColl = db.getCollection("numbers")
+  //#init-connection
 
   implicit val defaultPatience =
     PatienceConfig(timeout = 5.seconds, interval = 50.millis)
@@ -54,11 +53,16 @@ class MongoSourceSpec
 
     "stream the result of a simple Mongo query" in {
       val data: Seq[Int] = seed()
-      val numbersObservable = numbersColl.find()
 
-      val rows = MongoSource(numbersObservable).runWith(Sink.seq).futureValue
+      //#create-source
+      val source = MongoSource(numbersColl.find())
+      //#create-source
 
-      rows.map(_ \ "_id").map(_.as[Int]) must contain theSameElementsAs data
+      //#run-source
+      val rows = source.runWith(Sink.seq)
+      //#run-source
+
+      rows.futureValue.map(_ \ "_id").map(_.as[Int]) must contain theSameElementsAs data
     }
 
     "support multiple materializations" in {
